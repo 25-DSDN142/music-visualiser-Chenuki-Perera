@@ -1,5 +1,5 @@
-function draw() {
-  background(220);
+function draw_one_frame(words, vocal, drum, bass, other, counter)  {
+  //background(220);
 
   // Get volumes
   if (editorMode) {
@@ -11,11 +11,11 @@ function draw() {
     let now = millis();
     let songOffset = now - songEpoch;
     if (songIsPlaying) {
-      let analysis = Taira.getVolume(song, smoothing);
-      volumes[0] = analysis.vocal;
-      volumes[1] = analysis.drum;
-      volumes[2] = analysis.bass;
-      volumes[3] = analysis.other;
+      //let analysis = Taira.getVolume(song, smoothing);
+      volumes[0] = vocal;
+      volumes[1] = drum;
+      volumes[2] = bass;
+      volumes[3] = other;
     } else {
       volumes = [0, 0, 0, 0];
     }
