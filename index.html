@@ -1,64 +1,590 @@
 <!DOCTYPE html>
+<html lang="en">
 <head>
-    <script language="javascript" type="text/javascript" src="lib/p5.js"></script>
-    <script language="javascript" type="text/javascript" src="lib/p5.dom.js"></script>
-    <script language="javascript" type="text/javascript" src="lib/p5.sound.js"></script>
-    <script language="javascript" type="text/javascript" src="lib/taira.js"></script>
-    <script language="javascript" type="text/javascript" src="system_settings.js"></script>
-    <script language="javascript" type="text/javascript" src="music_starter.js"></script>
-    <script language="javascript" type="text/javascript" src="system_runner.js"></script>
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Music Style Visualizer</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/addons/p5.sound.min.js"></script>
     <style>
-        body   { padding: 0; margin: 0; }
-        .inner { position: absolute; }
-        #controls {
-            font: 300 12px "Helvetica Neue";
-            padding: 5;
-            margin: 5;
-            background: #f0f0f0;
-            opacity: 0.0;
-            -webkit-transition: opacity 0.2s ease;
-            -moz-transition: opacity 0.2s ease;
-            -o-transition: opacity 0.2s ease;
-            -ms-transition: opacity 0.2s ease;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-        #controls:hover { opacity: 0.9; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            background: linear-gradient(135deg, #000000, #1a1a1a);
+            color: white;
+            min-height: 100vh;
+            overflow-x: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            width: 100%;
+        }
+        
+        h1 {
+            font-weight: 600;
+            font-size: 3rem;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, #ff2d70, #ff7eb3, #ffcc00);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.8;
+            margin-bottom: 30px;
+        }
+        
+        .visualizer-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            height: 400px;
+            margin-bottom: 30px;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+        
+        #canvasContainer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+        
+        .circle-animation {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2;
+        }
+        
+        .circle {
+            position: absolute;
+            background: transparent;
+            width: calc(var(--i) * 2.5vmin);
+            aspect-ratio: 1;
+            border-radius: 50%;
+            border: 2px solid rgba(0, 255, 13, 0.7);
+            transform-style: preserve-3d;
+            transform: rotateX(70deg) translateZ(50px);
+            animation: animate 3s ease-in-out calc(var(--i) * 0.08s) infinite;
+            box-shadow: 0 0 15px rgba(124, 124, 124, 0.5), 
+                inset 0 0 15px rgba(124, 124, 124, 0.5);
+        }
+        
+        @keyframes animate {
+            0%, 100% {
+                transform: rotateX(70deg) translateZ(50px) translateY(0);
+                filter: hue-rotate(0);
+            }
+            50% {
+                transform: rotateX(70deg) translateZ(50px) translateY(-50vmin);
+                filter: hue-rotate(360deg);
+            }
+        }
+        
+        .controls {
+            width: 100%;
+            max-width: 600px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            margin-bottom: 30px;
+        }
+        
+        .control-row {
+            display: flex;
+            align-items: center;
+            margin: 15px 0;
+        }
+        
+        .control-label {
+            width: 100px;
+            font-weight: 500;
+            color: #ff7eb3;
+        }
+        
+        .slider-container {
+            flex: 1;
+        }
+        
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: rgba(255, 255, 255, 0.2);
+            outline: none;
+            -webkit-appearance: none;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #ff2d70;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(255, 45, 112, 0.5);
+        }
+        
+        .buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        
+        button {
+            background: linear-gradient(90deg, #ff2d70, #ff7eb3);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 30px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 5px 15px rgba(255, 45, 112, 0.3);
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(255, 45, 112, 0.4);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        .now-playing {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 1.2rem;
+            color: #ffcc00;
+        }
+        
+        .file-input {
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        .file-input label {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            display: inline-block;
+            transition: background 0.3s;
+        }
+        
+        .file-input label:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .visualizer-container {
+                height: 300px;
+            }
+            
+            .controls {
+                padding: 15px;
+            }
+        }
     </style>
-
 </head>
-<body style="background-color:white">
-    <div class="outer">
-        <div class="inner">
+<body>
+    <div class="container">
+       
+        
+        <div class="visualizer-container">
             <div id="canvasContainer"></div>
+            <div class="circle-animation">
+                <!-- 21 circles -->
+                <div class="circle" style="--i:0;"></div>
+                <div class="circle" style="--i:1;"></div>
+                <div class="circle" style="--i:2;"></div>
+                <div class="circle" style="--i:3;"></div>
+                <div class="circle" style="--i:4;"></div>
+                <div class="circle" style="--i:5;"></div>
+                <div class="circle" style="--i:6;"></div>
+                <div class="circle" style="--i:7;"></div>
+                <div class="circle" style="--i:8;"></div>
+                <div class="circle" style="--i:9;"></div>
+                <div class="circle" style="--i:10;"></div>
+                <div class="circle" style="--i:11;"></div>
+                <div class="circle" style="--i:12;"></div>
+                <div class="circle" style="--i:13;"></div>
+                <div class="circle" style="--i:14;"></div>
+                <div class="circle" style="--i:15;"></div>
+                <div class="circle" style="--i:16;"></div>
+                <div class="circle" style="--i:17;"></div>
+                <div class="circle" style="--i:18;"></div>
+                <div class="circle" style="--i:19;"></div>
+                <div class="circle" style="--i:20;"></div>
+            </div>
         </div>
-        <div class="inner" id="controls" height="500px">
-            <table>
-                <tr>
-                    <td>Words</td>
-                    <td id="wordsContainer"></td>
-                </tr>
-                <tr>
-                    <td>Vocals</td>
-                    <td id="slider1Container"></td>
-                </tr>
-                <tr>
-                    <td>Drum</td>
-                    <td id="slider2Container"></td>
-                </tr>
-                <tr>
-                    <td>Bass</td>
-                    <td id="slider3Container"></td>
-                </tr>
-                <tr>
-                    <td>Other</td>
-                    <td id="slider4Container"></td>
-                </tr>
-                <tr>
-                    <td></td>
-                    <td id="button1Container"></td>
-                </tr>
-            </table>
+        
+        <div class="now-playing">
+            <p>Now Playing: <span id="songTitle">Select a song to begin</span></p>
+        </div>
+        
+        <div class="controls">
+            <div class="control-row">
+                <div class="control-label">Bass</div>
+                <div class="slider-container">
+                    <input type="range" min="0" max="100" value="50" class="slider" id="bassSlider">
+                </div>
+            </div>
+            <div class="control-row">
+                <div class="control-label">Treble</div>
+                <div class="slider-container">
+                    <input type="range" min="0" max="100" value="50" class="slider" id="trebleSlider">
+                </div>
+            </div>
+            <div class="control-row">
+                <div class="control-label">Intensity</div>
+                <div class="slider-container">
+                    <input type="range" min="0" max="100" value="50" class="slider" id="intensitySlider">
+                </div>
+            </div>
+            <div class="control-row">
+                <div class="control-label">Speed</div>
+                <div class="slider-container">
+                    <input type="range" min="0.5" max="2" step="0.1" value="1" class="slider" id="speedSlider">
+                </div>
+            </div>
+            
+            <div class="buttons">
+                <button id="playButton">Play</button>
+                <button id="pauseButton">Pause</button>
+                <button id="randomizeButton">Randomize</button>
+            </div>
+            
+            <div class="file-input">
+                <label for="audioFile">Select Audio File</label>
+                <input type="file" id="audioFile" accept="audio/*" style="display: none;">
+            </div>
         </div>
     </div>
-</table>
+
+<script>
+let audioContext;
+let analyser;
+let audioElement;
+let source;
+let dataArray;
+let bufferLength;
+let isPlaying = false;
+let bassFilter, trebleFilter;
+let bassGain, trebleGain;
+
+// Store slider values
+let bassValue = 0.5;
+let trebleValue = 0.5;
+let intensityValue = 0.5;
+let speedValue = 1.0;
+
+function setup() {
+    let canvas = createCanvas(800, 400);
+    canvas.parent('canvasContainer');
+
+    // Create audio context + analyser
+    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    analyser = audioContext.createAnalyser();
+    analyser.fftSize = 2048;
+    bufferLength = analyser.frequencyBinCount;
+    dataArray = new Uint8Array(bufferLength);
+
+    // Create audio filters for bass and treble
+    bassFilter = audioContext.createBiquadFilter();
+    bassFilter.type = "lowshelf";
+    bassFilter.frequency.setValueAtTime(250, audioContext.currentTime);
+    
+    trebleFilter = audioContext.createBiquadFilter();
+    trebleFilter.type = "highshelf";
+    trebleFilter.frequency.setValueAtTime(3000, audioContext.currentTime);
+    
+    // Create gain nodes for better control
+    bassGain = audioContext.createGain();
+    trebleGain = audioContext.createGain();
+
+    // Create audio element
+    audioElement = new Audio();
+    audioElement.crossOrigin = "anonymous";
+    audioElement.loop = true;
+    
+    // Set up audio processing chain
+    source = audioContext.createMediaElementSource(audioElement);
+    source.connect(bassFilter);
+    bassFilter.connect(trebleFilter);
+    trebleFilter.connect(analyser);
+    analyser.connect(audioContext.destination);
+
+    colorMode(HSB, 360, 100, 100, 1);
+    noStroke();
+    
+    // Add event listeners for sliders
+    document.getElementById('bassSlider').addEventListener('input', function() {
+        bassValue = parseFloat(this.value) / 100;
+        updateAudioFilters();
+    });
+    
+    document.getElementById('trebleSlider').addEventListener('input', function() {
+        trebleValue = parseFloat(this.value) / 100;
+        updateAudioFilters();
+    });
+    
+    document.getElementById('intensitySlider').addEventListener('input', function() {
+        intensityValue = parseFloat(this.value) / 100;
+    });
+    
+    document.getElementById('speedSlider').addEventListener('input', function() {
+        speedValue = parseFloat(this.value);
+        if (audioElement) {
+            audioElement.playbackRate = speedValue;
+        }
+    });
+}
+
+function updateAudioFilters() {
+    // Convert 0-1 values to dB gain (-12 to +12 dB)
+    const bassGainDb = (bassValue - 0.5) * 24;
+    const trebleGainDb = (trebleValue - 0.5) * 24;
+    
+    bassFilter.gain.setValueAtTime(bassGainDb, audioContext.currentTime);
+    trebleFilter.gain.setValueAtTime(trebleGainDb, audioContext.currentTime);
+}
+
+function draw() {
+    background(0, 0, 0, 0.2);
+
+    if (isPlaying) {
+        analyser.getByteFrequencyData(dataArray);
+    }
+
+    drawCircles(bassValue, trebleValue, intensityValue, speedValue);
+}
+
+function drawCircles(bass, treble, intensity, speed) {
+    push();
+    translate(width / 2, height / 2);
+
+    // Apply speed to animation
+    const time = millis() * (0.5 + speed * 0.5) / 1000;
+
+    // Process frequency data if playing
+    let bassAvg = 0, midAvg = 0, trebleAvg = 0;
+    
+    if (isPlaying) {
+        const bassRange = dataArray.slice(0, 20);
+        const midRange = dataArray.slice(20, 100);
+        const trebleRange = dataArray.slice(100, 200);
+        
+        bassAvg = bassRange.reduce((a, b) => a + b, 0) / bassRange.length;
+        midAvg = midRange.reduce((a, b) => a + b, 0) / midRange.length;
+        trebleAvg = trebleRange.reduce((a, b) => a + b, 0) / trebleRange.length;
+    } else {
+        // Create some movement even when not playing
+        bassAvg = 100 + 50 * sin(time * 0.5);
+        midAvg = 80 + 40 * sin(time * 0.7);
+        trebleAvg = 60 + 30 * sin(time * 0.9);
+    }
+
+    // Draw circles based on frequency data and slider values
+    for (let i = 0; i < 12; i++) {
+        const radius = 30 + i * 20;
+        let pulse = 0;
+        
+        if (isPlaying) {
+            const segmentSize = Math.floor(bufferLength / 12);
+            let sum = 0;
+            for (let j = 0; j < segmentSize; j++) {
+                sum += dataArray[i * segmentSize + j];
+            }
+            pulse = (sum / segmentSize / 255) * 50 * intensity;
+        } else {
+            pulse = 10 + 5 * sin(time * 2 + i);
+        }
+        
+        // Apply bass, treble, and intensity to different aspects of the visualization
+        const bassEffect = 1 + (bassAvg / 255) * bass * 2;
+        const trebleEffect = 1 + (trebleAvg / 255) * treble * 2;
+        
+        // Base circle
+        noFill();
+        strokeWeight(2 + bass * 3);
+        stroke((i * 30 + time * 50 * speed) % 360, 80, 90, 0.7);
+        ellipse(0, 0, (radius + pulse * bassEffect) * 2);
+
+        // Outer particles (treble effect)
+        for (let a = 0; a < TWO_PI; a += PI / (10 + treble * 10)) {
+            const x = cos(a) * (radius + pulse * trebleEffect);
+            const y = sin(a) * (radius + pulse * trebleEffect);
+            fill((a * 180 / PI + time * 100 * speed) % 360, 80, 90, 0.8);
+            noStroke();
+            const particleSize = 3 + treble * 3;
+            ellipse(x, y, particleSize, particleSize);
+        }
+        
+        // Inner particles (mid-range effect)
+        for (let a = 0; a < TWO_PI; a += PI / (8 + intensity * 8)) {
+            const innerRadius = radius * 0.6;
+            const x = cos(a + time) * (innerRadius + pulse * 0.5);
+            const y = sin(a + time) * (innerRadius + pulse * 0.5);
+            fill((a * 180 / PI + 180 + time * 80 * speed) % 360, 80, 90, 0.6);
+            ellipse(x, y, 2 + intensity * 2, 2 + intensity * 2);
+        }
+    }
+
+    // Central element that responds to all frequencies
+        const centralSize = map(bassAvg, 0, 255, 20, 80) * bass 
+                          + map(trebleAvg, 0, 255, 10, 40) * treble;
+
+        fill((time * 30 * speed) % 360, 80, 90, 0.9);
+        noStroke();
+        ellipse(0, 0, centralSize, centralSize);
+    
+    // Add some rotating elements that respond to intensity
+    for (let i = 0; i < 6; i++) {
+        const angle = (TWO_PI / 6) * i + time;
+        const dist = 40 + intensity * 20;
+        const x = cos(angle) * dist;
+        const y = sin(angle) * dist;
+        const size = 8 + (midAvg / 255) * 15 * intensity;
+        
+        fill((angle * 180 / PI + time * 40 * speed) % 360, 80, 90, 0.7);
+        ellipse(x, y, size, size);
+    }
+
+    pop();
+}
+
+// Buttons
+document.getElementById('playButton').addEventListener('click', function () {
+    if (audioElement.src && !isPlaying) {
+        audioContext.resume().then(() => {
+            audioElement.play();
+            isPlaying = true;
+            document.getElementById('songTitle').textContent = "Playing: " + (audioElement.src.split('/').pop() || "audio");
+            loop();
+        });
+    } else if (!audioElement.src) {
+        // If no audio file is selected, load the default song.mp3
+        audioElement.src = 'song.mp3';
+        document.getElementById('songTitle').textContent = "Playing: Default Song";
+        
+        audioContext.resume().then(() => {
+            audioElement.play();
+            isPlaying = true;
+            loop();
+        }).catch(error => {
+            console.error("Error playing default song:", error);
+            document.getElementById('songTitle').textContent = "Error: Could not load song.mp3";
+        });
+    }
+});
+
+document.getElementById('pauseButton').addEventListener('click', function () {
+    if (isPlaying) {
+        audioElement.pause();
+        isPlaying = false;
+        document.getElementById('songTitle').textContent = "Paused";
+        noLoop();
+    }
+});
+
+document.getElementById('randomizeButton').addEventListener('click', function () {
+    document.getElementById('bassSlider').value = Math.floor(Math.random() * 100);
+    document.getElementById('trebleSlider').value = Math.floor(Math.random() * 100);
+    document.getElementById('intensitySlider').value = Math.floor(Math.random() * 50 + 50);
+    document.getElementById('speedSlider').value = (Math.random() * 1.5 + 0.5).toFixed(1);
+    
+    // Update the stored values
+    bassValue = parseFloat(document.getElementById('bassSlider').value) / 100;
+    trebleValue = parseFloat(document.getElementById('trebleSlider').value) / 100;
+    intensityValue = parseFloat(document.getElementById('intensitySlider').value) / 100;
+    speedValue = parseFloat(document.getElementById('speedSlider').value);
+    
+    // Update audio filters and playback rate
+    updateAudioFilters();
+    if (audioElement) {
+        audioElement.playbackRate = speedValue;
+    }
+});
+
+// File input
+document.getElementById('audioFile').addEventListener('change', function (e) {
+    const file = e.target.files[0];
+    if (file) {
+        const url = URL.createObjectURL(file);
+        audioElement.src = url;
+        document.getElementById('songTitle').textContent = "Loaded: " + file.name;
+        
+        // Auto-play when file is selected
+        audioContext.resume().then(() => {
+            audioElement.play();
+            isPlaying = true;
+            document.getElementById('songTitle').textContent = "Playing: " + file.name;
+            loop();
+        });
+    }
+});
+
+// Auto-play when user clicks anywhere (only first time)
+let userInteracted = false;
+window.addEventListener("click", function () {
+    if (!userInteracted) {
+        userInteracted = true;
+        document.getElementById('songTitle').textContent = "Please select an audio file to begin";
+    }
+});
+
+// Set up initial state
+window.addEventListener('load', function () {
+    document.getElementById('songTitle').textContent = "Please select an audio file to begin";
+    // Initialize audio filters with default values
+    if (audioContext) {
+        updateAudioFilters();
+    }
+});
+
+</script>
+
 </body>
+</html>
