@@ -380,24 +380,32 @@
             pop();
         }
         
-        // Event listeners
-        document.getElementById('playButton').addEventListener('click', function() {
-            if (!isPlaying) {
-                // In a real implementation, this would play actual audio
-                isPlaying = true;
-                document.getElementById('songTitle').textContent = "Simulated Visualization - Running";
-                loop();
-            }
-        });
+       document.getElementById('playButton').addEventListener('click', async function () {
+    if (!isPlaying) {
+        // Resume AudioContext if it’s suspended
+        if (audioContext.state === "suspended") {
+            await audioContext.resume();
+        }
+
+        // Play the actual audio file
+        audioElement.play();
+
+        isPlaying = true;
+        document.getElementById('songTitle').textContent =
+            audioElement.src.includes("blob:") ? "Playing Selected Audio" : "Simulated Visualization - Running";
+
+        loop(); // resume visualization
+    }
+     }); 
         
         document.getElementById('pauseButton').addEventListener('click', function() {
             if (isPlaying) {
+                audioElement.pause();
                 isPlaying = false;
-                document.getElementById('songTitle').textContent = "Simulated Visualization - Paused";
-                noLoop();
+                document.getElementById('songTitle').textContent = "Paused";
+                noLoop(); // pause visualization
             }
         });
-        
         document.getElementById('randomizeButton').addEventListener('click', function() {
             document.getElementById('bassSlider').value = random(0, 100);
             document.getElementById('trebleSlider').value = random(0, 100);
