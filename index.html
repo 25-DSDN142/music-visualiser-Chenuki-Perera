@@ -230,7 +230,7 @@
 </head>
 <body>
     <div class="container">
-        
+       
         
         <div class="visualizer-container">
             <div id="canvasContainer"></div>
@@ -471,13 +471,12 @@ function drawCircles(bass, treble, intensity, speed) {
             ellipse(x, y, 2 + intensity * 2, 2 + intensity * 2);
         }
     }
-    // Central element that responds to all frequencies
-     const centralSize = map(bassAvg, 0, 255, 20, 80) * bass 
-                       + map(trebleAvg, 0, 255, 10, 40) * treble;
 
-     fill((time * 30 * speed) % 360, 80, 90, 0.9);
-     noStroke();
-     ellipse(0, 0, centralSize, centralSize);
+    // Central element that responds to all frequencies
+    const centralSize = 20 + (bassAvg / 255) * 40 * bass + (trebleAvg / 255) * 20 * treble;
+    fill((time * 30 * speed) % 360, 80, 90, 0.9);
+    noStroke();
+    ellipse(0, 0, centralSize, centralSize);
     
     // Add some rotating elements that respond to intensity
     for (let i = 0; i < 6; i++) {
@@ -504,7 +503,18 @@ document.getElementById('playButton').addEventListener('click', function () {
             loop();
         });
     } else if (!audioElement.src) {
-        alert("Please select an audio file first!");
+        // If no audio file is selected, load the default song.mp3
+        audioElement.src = 'song.mp3';
+        document.getElementById('songTitle').textContent = "Playing: Default Song";
+        
+        audioContext.resume().then(() => {
+            audioElement.play();
+            isPlaying = true;
+            loop();
+        }).catch(error => {
+            console.error("Error playing default song:", error);
+            document.getElementById('songTitle').textContent = "Error: Could not load song.mp3";
+        });
     }
 });
 
