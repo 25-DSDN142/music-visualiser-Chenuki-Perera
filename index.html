@@ -473,10 +473,12 @@ function drawCircles(bass, treble, intensity, speed) {
     }
 
     // Central element that responds to all frequencies
-    const centralSize = 20 + (bassAvg / 255) * 40 * bass + (trebleAvg / 255) * 20 * treble;
-    fill((time * 30 * speed) % 360, 80, 90, 0.9);
-    noStroke();
-    ellipse(0, 0, centralSize, centralSize);
+        const centralSize = map(bassAvg, 0, 255, 20, 80) * bass 
+                          + map(trebleAvg, 0, 255, 10, 40) * treble;
+
+        fill((time * 30 * speed) % 360, 80, 90, 0.9);
+        noStroke();
+        ellipse(0, 0, centralSize, centralSize);
     
     // Add some rotating elements that respond to intensity
     for (let i = 0; i < 6; i++) {
