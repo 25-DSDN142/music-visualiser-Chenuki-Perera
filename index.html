@@ -359,7 +359,7 @@
                 }
                 
                 const avg = sum / segment;
-                const pulse = avg / 255 * 50 * intensity;
+                const pulse = map(avg, 0, 255, 0, 100 * intensity);
                 
                 // Draw circle
                 noFill();
