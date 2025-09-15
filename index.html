@@ -195,27 +195,6 @@
             color: #ffcc00;
         }
         
-        .visualization-types {
-            display: flex;
-            gap: 10px;
-            margin-top: 20px;
-            justify-content: center;
-        }
-        
-        .viz-type-btn {
-            background: rgba(255, 255, 255, 0.1);
-            color: white;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 20px;
-            cursor: pointer;
-            transition: background 0.3s;
-        }
-        
-        .viz-type-btn.active {
-            background: #ff2d70;
-        }
-        
         .file-input {
             margin: 20px 0;
             text-align: center;
@@ -251,10 +230,6 @@
 </head>
 <body>
     <div class="container">
-        <header>
-            <h1> Music Style Visualizer</h1>
-            <p class="subtitle">Advanced audio visualization with multiple effects</p>
-        </header>
         
         <div class="visualizer-container">
             <div id="canvasContainer"></div>
@@ -314,13 +289,6 @@
                 </div>
             </div>
             
-            <div class="visualization-types">
-                <button class="viz-type-btn active" data-viz="wave">Wave</button>
-                <button class="viz-type-btn" data-viz="circle">Circles</button>
-                <button class="viz-type-btn" data-viz="particle">Particles</button>
-                <button class="viz-type-btn" data-viz="spectrum">Spectrum</button>
-            </div>
-            
             <div class="buttons">
                 <button id="playButton">Play</button>
                 <button id="pauseButton">Pause</button>
@@ -342,8 +310,6 @@
         let dataArray;
         let bufferLength;
         let isPlaying = false;
-        let visualizationType = 'wave';
-        let particles = [];
         
         function setup() {
             let canvas = createCanvas(800, 400);
@@ -362,16 +328,6 @@
             source.connect(analyser);
             analyser.connect(audioContext.destination);
             
-            // Initialize particles
-            for (let i = 0; i < 100; i++) {
-                particles.push({
-                    x: random(width),
-                    y: random(height),
-                    size: random(2, 6),
-                    speed: random(1, 3)
-                });
-            }
-            
             colorMode(HSB, 360, 100, 100, 1);
             noStroke();
         }
@@ -384,44 +340,8 @@
             const bass = document.getElementById('bassSlider').value / 100;
             const treble = document.getElementById('trebleSlider').value / 100;
             const intensity = document.getElementById('intensitySlider').value / 100;
-            const speed = document.getElementById('speedSlider').value / 100;
             
-            switch(visualizationType) {
-                case 'wave':
-                    drawWaveform(bass, treble, intensity);
-                    break;
-                case 'circle':
-                    drawCircles(bass, treble, intensity);
-                    break;
-                case 'particle':
-                    drawParticles(bass, treble, intensity, speed);
-                    break;
-                case 'spectrum':
-                    drawSpectrum(bass, treble, intensity);
-                    break;
-            }
-        }
-        
-        function drawWaveform(bass, treble, intensity) {
-            push();
-            translate(width / 2, height / 2);
-            
-            // Draw waveform
-            beginShape();
-            for (let i = 0; i < bufferLength; i++) {
-                const angle = map(i, 0, bufferLength, 0, TWO_PI);
-                const amplitude = dataArray[i] / 255 * 200 * intensity;
-                const x = cos(angle) * (100 + amplitude * bass);
-                const y = sin(angle) * (100 + amplitude * treble);
-                vertex(x, y);
-                
-                // Add colorful points
-                fill(i / bufferLength * 360, 80, 90, 0.8);
-                ellipse(x, y, 3, 3);
-            }
-            endShape(CLOSE);
-            
-            pop();
+            drawCircles(bass, treble, intensity);
         }
         
         function drawCircles(bass, treble, intensity) {
@@ -460,44 +380,6 @@
             pop();
         }
         
-        function drawParticles(bass, treble, intensity, speed) {
-            // Update and draw particles
-            for (let i = 0; i < particles.length; i++) {
-                const p = particles[i];
-                
-                // Move particles
-                p.x += p.speed * speed;
-                if (p.x > width) p.x = 0;
-                
-                // React to audio
-                const freqIndex = floor(map(p.y, 0, height, 0, bufferLength - 1));
-                const sizeMod = dataArray[freqIndex] / 255 * 20 * intensity;
-                
-                // Draw particle
-                fill(map(p.y, 0, height, 180, 360), 80, 90, 0.8);
-                ellipse(p.x, p.y, p.size + sizeMod * bass, p.size + sizeMod * treble);
-            }
-        }
-        
-        function drawSpectrum(bass, treble, intensity) {
-            const barWidth = width / bufferLength;
-            
-            for (let i = 0; i < bufferLength; i++) {
-                const barHeight = dataArray[i] / 255 * height * intensity;
-                const x = i * barWidth;
-                
-                // Color based on frequency
-                const hue = map(i, 0, bufferLength, 0, 360);
-                
-                fill(hue, 80, 90, 0.8);
-                rect(x, height - barHeight, barWidth, barHeight);
-                
-                // Add reflection
-                fill(hue, 80, 90, 0.3);
-                rect(x, 0, barWidth, barHeight * 0.3);
-            }
-        }
-        
         // Event listeners
         document.getElementById('playButton').addEventListener('click', function() {
             if (!isPlaying) {
@@ -523,16 +405,6 @@
             document.getElementById('speedSlider').value = random(30, 80);
         });
         
-        // Visualization type buttons
-        const vizButtons = document.querySelectorAll('.viz-type-btn');
-        vizButtons.forEach(btn => {
-            btn.addEventListener('click', function() {
-                vizButtons.forEach(b => b.classList.remove('active'));
-                this.classList.add('active');
-                visualizationType = this.dataset.viz;
-            });
-        });
-        
         // File input for audio
         document.getElementById('audioFile').addEventListener('change', function(e) {
             const file = e.target.files[0];
@@ -543,7 +415,7 @@
             }
         });
         
-        // Initialize with wave visualization
+        // Initialize with circle visualization
         window.addEventListener('load', function() {
             // Start with a simulated visualization
             isPlaying = true;
